@@ -1,0 +1,105 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+  leagues       League[]
+}
+
+model League {
+  id               Int                 @id @default(autoincrement())
+  user_id          Int
+  name             String
+  sport            String
+  platform         String
+  format_preset    String
+  scoring_settings String              // JSON string
+  num_teams        Int
+  faab_budget      Int
+  faab_min_bid     Int
+  total_weeks      Int                 @default(17)
+  waiver_day       String?
+  created_at       DateTime            @default(now())
+  user             User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  teams            Team[]
+  free_agents      FreeAgent[]
+  recommendations  BidRecommendation[]
+}
+
+model Team {
+  id                Int      @id @default(autoincrement())
+  league_id         Int
+  team_name         String
+  is_user_team      Boolean  @default(false)
+  remaining_faab    Int
+  standing_position String?
+  league            League   @relation(fields: [league_id], references: [id], onDelete: Cascade)
+  rosters           Roster[]
+}
+
+model Player {
+  id              Int                 @id @default(autoincrement())
+  name            String
+  position        String
+  real_team       String
+  projected_stats String              // JSON string
+  ownership_pct   Float?
+  games_played    Int                 @default(0)
+  rosters         Roster[]
+  free_agents     FreeAgent[]
+  recommendations BidRecommendation[]
+}
+
+model Roster {
+  team_id   Int
+  player_id Int
+  team      Team   @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  player    Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@id([team_id, player_id])
+}
+
+model FreeAgent {
+  league_id Int
+  player_id Int
+  league    League @relation(fields: [league_id], references: [id], onDelete: Cascade)
+  player    Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@id([league_id, player_id])
+}
+
+model BidRecommendation {
+  id                Int        @id @default(autoincrement())
+  league_id         Int
+  player_id         Int
+  base_bid          Int
+  market_bid        Int
+  aggressive_bid    Int
+  confidence        String
+  opponents_needing Int
+  scarcity_level    String
+  reasoning         String
+  week_number       Int
+  created_at        DateTime   @default(now())
+  league            League     @relation(fields: [league_id], references: [id], onDelete: Cascade)
+  player            Player     @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  result            BidResult?
+}
+
+model BidResult {
+  id                 Int               @id @default(autoincrement())
+  recommendation_id  Int               @unique
+  won                Boolean
+  winning_bid_amount Int
+  created_at         DateTime          @default(now())
+  recommendation     BidRecommendation @relation(fields: [recommendation_id], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  background-color: #020617;
+  color: #f1f5f9;
+}
