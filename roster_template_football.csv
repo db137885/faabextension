@@ -1,0 +1,29 @@
+team_name,player_name,position,real_team,is_user_team,remaining_faab
+My Team,Josh Allen,QB,BUF,true,73
+My Team,Saquon Barkley,RB,PHI,true,73
+My Team,Breece Hall,RB,NYJ,true,73
+My Team,CeeDee Lamb,WR,DAL,true,73
+My Team,Amon-Ra St Brown,WR,DET,true,73
+My Team,Mark Andrews,TE,BAL,true,73
+My Team,Tank Dell,WR,HOU,true,73
+My Team,Jaylen Waddle,WR,MIA,true,73
+My Team,Zack Moss,RB,CIN,true,73
+My Team,Gus Edwards,RB,LAC,true,73
+GridIron Kings,Patrick Mahomes,QB,KC,false,88
+GridIron Kings,Derrick Henry,RB,BAL,false,88
+GridIron Kings,Ja'Marr Chase,WR,CIN,false,88
+GridIron Kings,Travis Kelce,TE,KC,false,88
+GridIron Kings,DK Metcalf,WR,SEA,false,88
+GridIron Kings,Raheem Mostert,RB,MIA,false,88
+Waiver Wizards,Lamar Jackson,QB,BAL,false,95
+Waiver Wizards,Bijan Robinson,RB,ATL,false,95
+Waiver Wizards,Tyreek Hill,WR,MIA,false,95
+Waiver Wizards,Davante Adams,WR,NYJ,false,95
+Waiver Wizards,Dalton Kincaid,TE,BUF,false,95
+Waiver Wizards,Nick Chubb,RB,CLE,false,95
+TD Machines,Jalen Hurts,QB,PHI,false,42
+TD Machines,Christian McCaffrey,RB,SF,false,42
+TD Machines,Justin Jefferson,WR,MIN,false,42
+TD Machines,George Kittle,TE,SF,false,42
+TD Machines,Deebo Samuel,WR,SF,false,42
+TD Machines,Kyren Williams,RB,LAR,false,42

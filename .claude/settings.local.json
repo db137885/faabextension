@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run db:reset)",
+      "Bash(npm run db:seed)",
+      "Bash(npx prisma db push --accept-data-loss)"
+    ]
+  }
+}

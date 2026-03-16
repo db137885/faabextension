@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "FAAB Advisor (NFC PoC)",
+  "version": "1.0",
+  "description": "Proof of Concept for FAAB Advisor injection directly onto NFC.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "*://nfc.shgn.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://nfc.shgn.com/*"],
+      "css": ["content.css"],
+      "js": ["content.js"]
+    }
+  ]
+}

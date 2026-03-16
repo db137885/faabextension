@@ -1,0 +1,55 @@
+team_name,player_name,position,real_team,is_user_team,remaining_faab
+My Team,Shohei Ohtani,DH/SP,LAD,true,714
+My Team,Mookie Betts,SS,LAD,true,714
+My Team,Freddie Freeman,1B,LAD,true,714
+My Team,Trea Turner,SS,PHI,true,714
+My Team,Corbin Carroll,OF,ARI,true,714
+My Team,Gunnar Henderson,SS,BAL,true,714
+My Team,Bobby Witt Jr,SS,KC,true,714
+My Team,Spencer Strider,SP,ATL,true,714
+My Team,Logan Webb,SP,SF,true,714
+My Team,Zack Wheeler,SP,PHI,true,714
+My Team,Tarik Skubal,SP,DET,true,714
+My Team,Dylan Cease,SP,SD,true,714
+My Team,Salvador Perez,C,KC,true,714
+My Team,Ozzie Albies,2B,ATL,true,714
+My Team,Josh Jung,3B,TEX,true,714
+My Team,Kyle Tucker,OF,HOU,true,714
+My Team,Jazz Chisholm,3B,NYY,true,714
+My Team,Pete Alonso,1B,NYM,true,714
+My Team,Josh Hader,RP,HOU,true,714
+My Team,Ryan Helsley,RP,STL,true,714
+Team Alvarez,Yordan Alvarez,DH,HOU,false,820
+Team Alvarez,Aaron Judge,OF,NYY,false,820
+Team Alvarez,Bryce Harper,1B,PHI,false,820
+Team Alvarez,Luis Robert,OF,CWS,false,820
+Team Alvarez,Max Fried,SP,NYY,false,820
+Team Alvarez,Framber Valdez,SP,HOU,false,820
+Team Alvarez,Adley Rutschman,C,BAL,false,820
+Team Alvarez,Willy Adames,SS,SF,false,820
+Team Alvarez,Bo Bichette,SS,TOR,false,820
+Team Alvarez,Yandy Diaz,1B,TB,false,820
+Team Soto,Juan Soto,OF,NYM,false,550
+Team Soto,Vladimir Guerrero Jr,1B,TOR,false,550
+Team Soto,Rafael Devers,3B,BOS,false,550
+Team Soto,Marcus Semien,2B,TEX,false,550
+Team Soto,Luis Castillo,SP,SEA,false,550
+Team Soto,Gerrit Cole,SP,NYY,false,550
+Team Soto,Jarren Duran,OF,BOS,false,550
+Team Soto,Anthony Volpe,SS,NYY,false,550
+Team Soto,CJ Abrams,SS,WSH,false,550
+Team Ohtani,Mike Trout,OF,LAA,false,910
+Team Ohtani,Julio Rodriguez,OF,SEA,false,910
+Team Ohtani,Corey Seager,SS,TEX,false,910
+Team Ohtani,Matt Olson,1B,ATL,false,910
+Team Ohtani,Kodai Senga,SP,NYM,false,910
+Team Ohtani,Shane McClanahan,SP,TB,false,910
+Team Ohtani,Tyler Glasnow,SP,LAD,false,910
+Team Ohtani,Jose Ramirez,3B,CLE,false,910
+Team Ohtani,William Contreras,C,MIL,false,910
+Team Acuna,Ronald Acuna Jr,OF,ATL,false,340
+Team Acuna,Fernando Tatis Jr,OF,SD,false,340
+Team Acuna,Elly De La Cruz,SS,CIN,false,340
+Team Acuna,Jackson Chourio,OF,MIL,false,340
+Team Acuna,Paul Skenes,SP,PIT,false,340
+Team Acuna,Grayson Rodriguez,SP,BAL,false,340
