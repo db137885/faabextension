@@ -1,105 +1,115 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
 model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  password_hash String
-  created_at    DateTime @default(now())
-  leagues       League[]
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  leagues   League[]
+  createdAt DateTime @default(now())
 }
 
 model League {
-  id               Int                 @id @default(autoincrement())
-  user_id          Int
-  name             String
-  sport            String
-  platform         String
-  format_preset    String
-  scoring_settings String              // JSON string
-  num_teams        Int
-  faab_budget      Int
-  faab_min_bid     Int
-  total_weeks      Int                 @default(17)
-  waiver_day       String?
-  created_at       DateTime            @default(now())
-  user             User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  teams            Team[]
-  free_agents      FreeAgent[]
-  recommendations  BidRecommendation[]
+  id              String              @id @default(uuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id])
+  name            String
+  sport           String              // "baseball" | "football"
+  platform        String              // "NFBC" | "ESPN" | "Yahoo" | "Sleeper" | "Fantrax" | "other"
+  formatPreset    String?             // "nfbc_main_event" | "nfbc_oc" | "standard_ppr" | etc.
+  scoringSettings String              // Full scoring config (stored as JSON string)
+  numTeams        Int
+  faabBudget      Int                 // Total budget (100 or 1000)
+  faabMinBid      Int                 @default(0) // 0 or 1
+  totalWeeks      Int
+  currentWeek     Int                 @default(1)
+  waiverDay       String?
+  teams           Team[]
+  freeAgents      FreeAgent[]
+  recommendations BidRecommendation[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 }
 
 model Team {
-  id                Int      @id @default(autoincrement())
-  league_id         Int
-  team_name         String
-  is_user_team      Boolean  @default(false)
-  remaining_faab    Int
-  standing_position String?
-  league            League   @relation(fields: [league_id], references: [id], onDelete: Cascade)
-  rosters           Roster[]
+  id            String   @id @default(uuid())
+  leagueId      String
+  league        League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  teamName      String
+  isUserTeam    Boolean  @default(false)
+  remainingFaab Int
+  standing      String?  // "3rd" or "3-2" etc.
+  roster        Roster[]
 }
 
 model Player {
-  id              Int                 @id @default(autoincrement())
-  name            String
-  position        String
-  real_team       String
-  projected_stats String              // JSON string
-  ownership_pct   Float?
-  games_played    Int                 @default(0)
-  rosters         Roster[]
-  free_agents     FreeAgent[]
-  recommendations BidRecommendation[]
+  id             String              @id @default(uuid())
+  name           String
+  position       String              // "QB", "RB", "SP", "RP", etc.
+  realTeam       String              // "CLE", "NYY", etc.
+  projectedStats String?             // stored as JSON string { W: 2, K: 16, ERA: 3.20, ... }
+  ownershipPct   Float?
+  gamesPlayed    Int?
+  note           String?             // "Returning from IL", "Named closer", etc.
+  roster         Roster[]
+  freeAgent      FreeAgent[]
 }
 
 model Roster {
-  team_id   Int
-  player_id Int
-  team      Team   @relation(fields: [team_id], references: [id], onDelete: Cascade)
-  player    Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  teamId   String
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
 
-  @@id([team_id, player_id])
+  @@unique([teamId, playerId])
 }
 
 model FreeAgent {
-  league_id Int
-  player_id Int
-  league    League @relation(fields: [league_id], references: [id], onDelete: Cascade)
-  player    Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
 
-  @@id([league_id, player_id])
+  @@unique([leagueId, playerId])
 }
 
 model BidRecommendation {
-  id                Int        @id @default(autoincrement())
-  league_id         Int
-  player_id         Int
-  base_bid          Int
-  market_bid        Int
-  aggressive_bid    Int
-  confidence        String
-  opponents_needing Int
-  scarcity_level    String
-  reasoning         String
-  week_number       Int
-  created_at        DateTime   @default(now())
-  league            League     @relation(fields: [league_id], references: [id], onDelete: Cascade)
-  player            Player     @relation(fields: [player_id], references: [id], onDelete: Cascade)
-  result            BidResult?
+  id               String     @id @default(uuid())
+  leagueId         String
+  league           League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  playerName       String
+  position         String
+  realTeam         String
+  baseBid          Int
+  marketBid        Int
+  aggressiveBid    Int
+  confidence       String     // "high" | "medium" | "low"
+  scarcityLevel    String     // "very_high" | "high" | "medium" | "low"
+  opponentsNeeding Int
+  budgetImpact     Float      // percentage of remaining FAAB
+  needMatch        Boolean
+  reasoning        String
+  projectedStats   String?    // stored as JSON string
+  threatDetails    String?    // Array of { team, faab, needLevel } (stored as JSON string)
+  weekNumber       Int
+  result           BidResult?
+  createdAt        DateTime   @default(now())
 }
 
 model BidResult {
-  id                 Int               @id @default(autoincrement())
-  recommendation_id  Int               @unique
-  won                Boolean
-  winning_bid_amount Int
-  created_at         DateTime          @default(now())
-  recommendation     BidRecommendation @relation(fields: [recommendation_id], references: [id], onDelete: Cascade)
+  id               String            @id @default(uuid())
+  recommendationId String            @unique
+  recommendation   BidRecommendation @relation(fields: [recommendationId], references: [id])
+  didBid           Boolean
+  won              Boolean?
+  winningBidAmount Int?
+  createdAt        DateTime          @default(now())
 }

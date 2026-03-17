@@ -63,22 +63,41 @@ export default function ImportData() {
     setStatus('Importing data...');
 
     try {
-      // Step 1: Import CSV data
-      const importRes = await fetch(`/api/leagues/${id}/import`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rosterCsv: rosterCsv || undefined,
-          freeAgentCsv: freeAgentCsv || undefined,
-        }),
-      });
-
-      if (!importRes.ok) {
-        const data = await importRes.json();
-        throw new Error(data.error || 'Import failed');
+      // Step 1: Push Roster Text
+      if (rosterCsv) {
+         if (rosterCsv.includes('\t') || rosterCsv.substring(0, 30).includes(' ')) {
+           await fetch(`/api/leagues/${id}/paste`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ pastedText: rosterCsv }),
+           });
+         } else {
+           await fetch(`/api/leagues/${id}/import`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ rosterCsv }),
+           });
+         }
       }
 
-      // Step 2: Run bid engine
+      // Step 2: Push FA Text
+      if (freeAgentCsv) {
+         if (freeAgentCsv.includes('\t') || freeAgentCsv.substring(0, 50).includes(' ')) {
+           await fetch(`/api/leagues/${id}/paste`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ pastedText: freeAgentCsv }),
+           });
+         } else {
+           await fetch(`/api/leagues/${id}/import`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ freeAgentCsv }),
+           });
+         }
+      }
+
+      // Step 3: Run bid engine
       setStatus('Running bid engine...');
       setRunningEngine(true);
 
@@ -187,7 +206,7 @@ export default function ImportData() {
           {tab === 'csv' ? (
             <CsvUpload type="roster" onDataReady={handleRosterData} />
           ) : (
-            <PasteImport onDataReady={handleRosterData} />
+            <PasteImport leagueId={id} onDataReady={handleRosterData} expectedType="roster" />
           )}
 
           {/* Skip button */}
@@ -257,7 +276,7 @@ export default function ImportData() {
           {tab === 'csv' ? (
             <CsvUpload type="freeagent" onDataReady={handleFaData} />
           ) : (
-            <PasteImport onDataReady={handleFaData} />
+            <PasteImport leagueId={id} onDataReady={handleFaData} expectedType="freeagent" />
           )}
 
           {error && (

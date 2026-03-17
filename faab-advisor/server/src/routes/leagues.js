@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { prisma } from '../index.js';
 import { parse } from 'csv-parse/sync';
 import { generateAllRecommendations, calculatePlayerValue } from '../services/bidEngine.js';
+import { detectPastedDataType, parsePastedRosterData, parsePastedFreeAgentData } from '../services/pasteParser.js';
 
 const __dirnameLoc = dirname(fileURLToPath(import.meta.url));
 const sharedPath = resolve(__dirnameLoc, '..', '..', '..', 'shared', 'index.js');
@@ -82,7 +83,6 @@ router.get('/', async (_req, res) => {
           include: { roster: { include: { player: true } } },
         },
         recommendations: {
-          include: { player: true },
           orderBy: { marketBid: 'desc' },
         },
       },
@@ -109,7 +109,6 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// GET /api/leagues/:id — get league detail
 router.get('/:id', async (req, res) => {
   try {
     const league = await prisma.league.findUnique({
@@ -122,7 +121,7 @@ router.get('/:id', async (req, res) => {
           include: { player: true },
         },
         recommendations: {
-          include: { player: true, results: true },
+          include: { result: true },
           orderBy: { marketBid: 'desc' },
         },
       },
@@ -144,6 +143,58 @@ router.get('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Error getting league:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/leagues/:id/paste — smart paste parser endpoint
+router.post('/:id/paste', async (req, res) => {
+  try {
+    const league = await prisma.league.findUnique({ where: { id: req.params.id } });
+    if (!league) return res.status(404).json({ error: 'League not found' });
+
+    const { pastedText } = req.body;
+    if (!pastedText) return res.status(400).json({ error: 'No pasted text provided' });
+
+    const dataType = detectPastedDataType(pastedText);
+
+    if (dataType === 'roster') {
+      const teams = parsePastedRosterData(pastedText);
+      for (const t of teams) {
+        let team = await prisma.team.findFirst({ where: { leagueId: league.id, teamName: t.team_name }});
+        if (!team) {
+           team = await prisma.team.create({ data: { leagueId: league.id, teamName: t.team_name, isUserTeam: t.is_user_team, remainingFaab: t.remaining_faab }});
+        } else if (t.remaining_faab !== null) {
+           await prisma.team.update({ where: { id: team.id }, data: { remainingFaab: t.remaining_faab }});
+        }
+        for (const pName of t.players) {
+           let player = await prisma.player.findFirst({ where: { name: pName }});
+           if (!player) {
+             player = await prisma.player.create({ data: { name: pName, position: 'UNK', realTeam: 'UNK' }});
+           }
+           let existingRoster = await prisma.roster.findFirst({ where: { teamId: team.id, playerId: player.id } });
+           if (!existingRoster) {
+             await prisma.roster.create({ data: { teamId: team.id, playerId: player.id }});
+           }
+        }
+      }
+      res.json({ success: true, detectedType: 'roster', message: `Parsed ${teams.length} teams` });
+    } else {
+      const freeAgents = parsePastedFreeAgentData(pastedText);
+      for (const fa of freeAgents) {
+         let player = await prisma.player.findFirst({ where: { name: fa.name }});
+         if (!player) {
+            player = await prisma.player.create({ data: { name: fa.name, position: fa.position, realTeam: fa.real_team }});
+         }
+         let existingFA = await prisma.freeAgent.findFirst({ where: { leagueId: league.id, playerId: player.id }});
+         if (!existingFA) {
+            await prisma.freeAgent.create({ data: { leagueId: league.id, playerId: player.id }});
+         }
+      }
+      res.json({ success: true, detectedType: 'freeAgents', message: `Parsed ${freeAgents.length} free agents` });
+    }
+  } catch (err) {
+    console.error('Error in paste parser:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -259,7 +310,9 @@ router.post('/:id/recommendations', async (req, res) => {
       await prisma.bidRecommendation.create({
         data: {
           leagueId: league.id,
-          playerId: player.id,
+          playerName: rec.playerName,
+          position: rec.position,
+          realTeam: rec.realTeam,
           baseBid: rec.baseBid,
           marketBid: rec.marketBid,
           aggressiveBid: rec.aggressiveBid,
@@ -271,7 +324,6 @@ router.post('/:id/recommendations', async (req, res) => {
           projectedStats: JSON.stringify(rec.projectedStats),
           needMatch: rec.needMatch,
           budgetImpact: rec.budgetImpact,
-          pacingStatus: rec.pacingStatus,
           weekNumber: league.currentWeek,
         },
       });
@@ -280,7 +332,6 @@ router.post('/:id/recommendations', async (req, res) => {
     // Fetch and return the stored recommendations
     const stored = await prisma.bidRecommendation.findMany({
       where: { leagueId: league.id },
-      include: { player: true },
       orderBy: { marketBid: 'desc' },
     });
 
@@ -296,7 +347,7 @@ router.get('/:id/recommendations', async (req, res) => {
   try {
     const recommendations = await prisma.bidRecommendation.findMany({
       where: { leagueId: req.params.id },
-      include: { player: true, results: true },
+      include: { result: true },
       orderBy: { marketBid: 'desc' },
     });
     res.json(recommendations);

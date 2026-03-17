@@ -25,7 +25,7 @@ async function main() {
   const user = await prisma.user.create({
     data: {
       email: 'demo@faabadvisor.com',
-      password_hash: 'hashedpassword' // simple stub
+      name: 'Demo User'
     }
   });
 
@@ -39,7 +39,6 @@ async function main() {
 
   // Create or retrieve players
   const ensurePlayer = async (row, sport, isFA = false) => {
-    // For simplicity, just use name as unique key for MVP
     if (players.has(row.player_name)) return players.get(row.player_name);
 
     let projections = {};
@@ -64,10 +63,10 @@ async function main() {
       data: {
         name: row.player_name,
         position: row.position,
-        real_team: row.real_team || 'FA',
-        projected_stats: JSON.stringify(projections),
-        ownership_pct: row.ownership_pct ? parseFloat(row.ownership_pct) : 0,
-        games_played: row.games_played ? parseInt(row.games_played) : 10
+        realTeam: row.real_team || 'FA',
+        projectedStats: JSON.stringify(projections),
+        ownershipPct: row.ownership_pct ? parseFloat(row.ownership_pct) : 0,
+        gamesPlayed: row.games_played ? parseInt(row.games_played) : 10
       }
     });
     players.set(p.name, p.id);
@@ -79,20 +78,20 @@ async function main() {
   for (const row of bbFA) await ensurePlayer(row, 'baseball', true);
 
   const createLeagueAndTeams = async (name, presetKey, rosterCsv) => {
-    const preset = LEAGUE_PRESETS[presetKey];
+    const preset = LEAGUE_PRESETS[presetKey] || { sport: 'baseball', name: 'Custom', scoring: 'H2H', numTeams: 12, faabBudget: 1000, faabMinBid: 0, totalWeeks: 24, waiverDay: 'Tuesday' };
     const league = await prisma.league.create({
       data: {
-        user_id: user.id,
+        userId: user.id,
         name: name,
         sport: preset.sport,
         platform: 'NFBC/Sleeper',
-        format_preset: preset.name,
-        scoring_settings: JSON.stringify({ type: preset.scoring }),
-        num_teams: preset.numTeams,
-        faab_budget: preset.faabBudget,
-        faab_min_bid: preset.faabMinBid,
-        total_weeks: preset.totalWeeks,
-        waiver_day: preset.waiverDay
+        formatPreset: preset.name,
+        scoringSettings: JSON.stringify({ type: preset.scoring }),
+        numTeams: preset.numTeams || 12,
+        faabBudget: preset.faabBudget || 1000,
+        faabMinBid: preset.faabMinBid || 0,
+        totalWeeks: preset.totalWeeks || 24,
+        waiverDay: preset.waiverDay || 'Tuesday'
       }
     });
 
@@ -100,8 +99,8 @@ async function main() {
     for (const row of rosterCsv) {
       if (!teamsByFormat[row.team_name]) {
         teamsByFormat[row.team_name] = {
-          is_user: row.is_user_team === 'true',
-          faab: parseInt(row.remaining_faab || preset.faabBudget),
+          isUserTeam: row.is_user_team === 'true',
+          faab: parseInt(row.remaining_faab || league.faabBudget),
           players: []
         };
       }
@@ -111,15 +110,15 @@ async function main() {
     for (const [tName, data] of Object.entries(teamsByFormat)) {
       const team = await prisma.team.create({
         data: {
-          league_id: league.id,
-          team_name: tName,
-          is_user_team: data.is_user,
-          remaining_faab: data.faab,
+          leagueId: league.id,
+          teamName: tName,
+          isUserTeam: data.isUserTeam,
+          remainingFaab: data.faab,
         }
       });
       for (const pName of data.players) {
         await prisma.roster.create({
-          data: { team_id: team.id, player_id: players.get(pName) }
+          data: { teamId: team.id, playerId: players.get(pName) }
         });
       }
     }
@@ -134,8 +133,9 @@ async function main() {
   console.log('Adding free agents...');
   for (const row of bbFA) {
     const pid = players.get(row.player_name);
-    await prisma.freeAgent.create({ data: { league_id: l1.id, player_id: pid } });
-    await prisma.freeAgent.create({ data: { league_id: l3.id, player_id: pid } });
+    if (!pid) continue;
+    await prisma.freeAgent.create({ data: { leagueId: l1.id, playerId: pid } });
+    await prisma.freeAgent.create({ data: { leagueId: l3.id, playerId: pid } });
   }
 
   console.log('Seeding complete.');

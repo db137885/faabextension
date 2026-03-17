@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BudgetGauge from '../components/BudgetGauge';
 import BidCard from '../components/BidCard';
 
 export default function LeagueDetail({ leagueId }) {
+    const navigate = useNavigate();
     const [league, setLeague] = useState(null);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -10,10 +12,10 @@ export default function LeagueDetail({ leagueId }) {
 
     const fetchLeague = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/leagues/${leagueId}`);
+            const res = await fetch(`/api/leagues/${leagueId}`);
             const data = await res.json();
-            setLeague(data.league);
-            setRecommendations(data.recommendations);
+            setLeague(data);
+            setRecommendations(data.recommendations || []);
         } catch (e) {
             console.error(e);
         } finally {
@@ -28,12 +30,11 @@ export default function LeagueDetail({ leagueId }) {
     const runEngine = async () => {
         setEngineLoading(true);
         try {
-            const res = await fetch(`http://localhost:3000/api/leagues/${leagueId}/recommendations`, {
+            const res = await fetch(`/api/leagues/${leagueId}/recommendations`, {
                 method: 'POST'
             });
             const data = await res.json();
-            // Data contains the transient details which are rich for the demo UX!
-            setRecommendations(data.results.sort((a, b) => b.market_bid - a.market_bid));
+            setRecommendations(data.sort((a, b) => b.marketBid - a.marketBid));
         } catch (e) {
             console.error(e);
         } finally {
@@ -58,6 +59,15 @@ export default function LeagueDetail({ leagueId }) {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                        onClick={() => navigate(`/import/${leagueId}`)}
+                        style={{
+                            padding: "8px 16px", borderRadius: 6, border: "1px solid #10b981",
+                            background: "transparent", color: "#10b981",
+                            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit"
+                        }}>
+                        Import / Paste Data
+                    </button>
                     {recommendations.length > 0 && (
                         <button
                             onClick={() => setRecommendations([])}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import BidCard from '../components/BidCard';
 
 function CrossLeagueView({ leagues }) {
@@ -48,7 +49,8 @@ function CrossLeagueView({ leagues }) {
     );
 }
 
-export default function Dashboard({ leagues, onSelectLeague }) {
+export default function Dashboard({ leagues }) {
+    const navigate = useNavigate();
     if (!leagues || leagues.length === 0) return <div style={{ textAlign: "center", padding: 40, color: "#64748b" }}>No leagues detected or loading...</div>;
 
     const totalRemaining = leagues.reduce((s, l) => s + (l.teams?.find(t => t.is_user_team)?.remaining_faab || 0), 0);
@@ -90,7 +92,7 @@ export default function Dashboard({ leagues, onSelectLeague }) {
                             <span style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>{l.sport === "baseball" ? "⚾" : "🏈"} {l.name}</span>
                             <span style={{ fontSize: 11, color: "#64748b", marginLeft: 8 }}>{l.format_preset} · ${(l.teams?.find(t => t.is_user_team)?.remaining_faab || 0)} remaining</span>
                         </div>
-                        <button onClick={() => onSelectLeague(l.id)} style={{
+                        <button onClick={() => navigate(`/league/${l.id}`)} style={{
                             padding: "4px 12px", borderRadius: 6, border: "1px solid #1e293b", background: "transparent", color: "#3b82f6", fontSize: 11, cursor: "pointer", fontFamily: "inherit"
                         }}>View Detail →</button>
                     </div>
